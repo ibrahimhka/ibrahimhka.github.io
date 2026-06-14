@@ -1,438 +1,114 @@
-/**
- * Portfolio Website - Interactive JavaScript
- * Handles: Navigation, Scroll animations, Collapsible panels, Lightbox, Lazy loading
- */
+(function () {
+  'use strict';
 
-(function() {
-    'use strict';
+  function each(list, fn) {
+    for (var i = 0; i < list.length; i++) fn(list[i], i);
+  }
 
-    // ========================================
-    // DOM Elements
-    // ========================================
-    const elements = {
-        nav: document.querySelector('.nav'),
-        navToggle: document.querySelector('.nav-toggle'),
-        navLinks: document.querySelector('.nav-links'),
-        modal: document.getElementById('projectModal'),
-        modalOverlay: document.querySelector('.modal-overlay'),
-        modalClose: document.querySelector('.modal-close'),
-        modalTitle: document.getElementById('modalTitle'),
-        galleryTrack: document.querySelector('.gallery-track'),
-        galleryDots: document.querySelector('.gallery-dots'),
-        galleryPrev: document.querySelector('.gallery-prev'),
-        galleryNext: document.querySelector('.gallery-next'),
-        projectPanels: document.querySelectorAll('.project-panel'),
-        fadeElements: document.querySelectorAll('.fade-in')
-    };
+  // Dynamic date
+  each(document.querySelectorAll('.masthead-date'), function (el) { el.textContent = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }); });
 
-    // ========================================
-    // State
-    // ========================================
-    let currentGalleryIndex = 0;
-    let currentGalleryItems = [];
+  // Smooth scroll for nav links
+  each(document.querySelectorAll('.section-nav a[href^="#"]'), function (link) {
+    link.addEventListener('click', function (e) {
+      e.preventDefault();
+      var target = document.querySelector(this.getAttribute('href'));
+      if (target) target.scrollIntoView({ behavior: 'smooth' });
+    });
+  });
 
-    // ========================================
-    // Navigation
-    // ========================================
-    function initNavigation() {
-        // Mobile toggle
-        elements.navToggle.addEventListener('click', () => {
-            elements.navToggle.classList.toggle('active');
-            elements.navLinks.classList.toggle('active');
-            const isExpanded = elements.navLinks.classList.contains('active');
-            elements.navToggle.setAttribute('aria-expanded', isExpanded);
+  // Active nav highlight on scroll
+  var sections = document.querySelectorAll('section[id]');
+  var navItems = document.querySelectorAll('.section-nav a[href^="#"]');
+
+  function highlightNav() {
+    var scrollY = window.pageYOffset;
+    each(sections, function (section) {
+      var top = section.offsetTop - 100;
+      var bottom = top + section.offsetHeight;
+      var id = section.getAttribute('id');
+      if (scrollY >= top && scrollY < bottom) {
+        each(navItems, function (item) {
+          item.classList.remove('active');
+          if (item.getAttribute('href') === '#' + id) item.classList.add('active');
         });
+      }
+    });
+  }
+  window.addEventListener('scroll', highlightNav, { passive: true });
+  highlightNav();
 
-        // Close mobile nav on link click
-        elements.navLinks.querySelectorAll('a').forEach(link => {
-            link.addEventListener('click', () => {
-                elements.navToggle.classList.remove('active');
-                elements.navLinks.classList.remove('active');
-                elements.navToggle.setAttribute('aria-expanded', 'false');
-            });
-        });
+  // ---- Project modal logic (nav + keyboard) ----
 
-        // Smooth scroll for anchor links
-        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-            anchor.addEventListener('click', function(e) {
-                e.preventDefault();
-                const target = document.querySelector(this.getAttribute('href'));
-                if (target) {
-                    const navHeight = elements.nav.offsetHeight;
-                    const targetPosition = target.getBoundingClientRect().top + window.pageYOffset - navHeight;
-                    window.scrollTo({
-                        top: targetPosition,
-                        behavior: 'smooth'
-                    });
-                }
-            });
-        });
+  var modal = document.getElementById('project-modal');
+  var viewport = document.getElementById('gallery-viewport');
+  var counter = document.getElementById('gallery-counter');
+  var closeBtn = document.getElementById('modal-close');
+  var prevBtn = document.getElementById('gallery-prev');
+  var nextBtn = document.getElementById('gallery-next');
+
+  var projects = {
+    bubuai: { title: 'BubuAI', desc: 'Enterprise childcare management with AI face recognition for attendance and parent communication.', tags: 'Python \u00b7 Face Rec. \u00b7 PostgreSQL', assets: ['screen-1.png', 'screen-2.png', 'screen-3.png', 'screen-4.png', 'screen-5.png', 'screen-6.png'] },
+    draims: { title: 'Draims AI', desc: 'AI video and image generation platform built on Google Imagen 3, ElevenLabs, Veo3, Runway and Kling.', tags: 'Python \u00b7 TypeScript \u00b7 FFMPEG \u00b7 GenAI', assets: ['hero.jpeg', 'screen-1.png', 'screen-2.png', 'screen-3.png', 'screen-4.png', 'screen-5.png', 'video.mp4'] },
+    hl: { title: 'HistoryLens', desc: 'News aggregation with an interactive 3D globe, real-time monitoring and NLP entity extraction.', tags: 'Python \u00b7 NLP \u00b7 WebGL', assets: ['screen-1.png', 'screen-2.png', 'screen-3.png', 'screen-4.png', 'screen-5.png', 'screen-6.png', 'screen-7.png'] },
+    mlcryptotrade: { title: 'ML Crypto Algo Trading', desc: 'Algorithmic trading bot using ML regressors and reinforcement learning on self-hosted Kubernetes with GPU training.', tags: 'Python \u00b7 ML/RL \u00b7 Kubernetes \u00b7 Freqtrade', assets: ['chart-1.jpeg', 'chart-2.jpeg', 'chart-3.jpeg', 'chart-4.jpeg', 'video-1.mp4', 'video-2.mp4'] }
+  };
+
+  var isVid = {};
+  var keys = Object.keys(projects);
+  for (var k = 0; k < keys.length; k++) {
+    isVid[keys[k]] = {};
+    for (var a = 0; a < projects[keys[k]].assets.length; a++) {
+      var fn = projects[keys[k]].assets[a];
+      isVid[keys[k]][fn] = fn.indexOf('.mp4') > -1;
     }
+  }
 
-    // ========================================
-    // Collapsible Project Panels
-    // ========================================
-    function initCollapsiblePanels() {
-        elements.projectPanels.forEach(panel => {
-            const headerBtn = panel.querySelector('.project-header-btn');
+  var curSlug = null;
+  var curIdx = 0;
 
-            headerBtn.addEventListener('click', () => {
-                const isExpanded = panel.classList.contains('expanded');
+  var BASE = 'https://ibrahimhka.github.io/assets/';
 
-                // Toggle this panel
-                panel.classList.toggle('expanded');
-                headerBtn.setAttribute('aria-expanded', !isExpanded);
-            });
+  function show(idx) {
+    var data = projects[curSlug];
+    var name = data.assets[idx];
+    var path = BASE + curSlug + '/' + name;
+    viewport.innerHTML = isVid[curSlug][name]
+      ? '<video controls autoplay><source src="' + path + '" type="video/mp4"></video>'
+      : '<img src="' + path + '" alt="' + data.title + '">';
+    counter.textContent = (idx + 1) + ' / ' + data.assets.length;
+    if (prevBtn) prevBtn.disabled = idx === 0;
+    if (nextBtn) nextBtn.disabled = idx === data.assets.length - 1;
+  }
 
-            // Keyboard accessibility
-            headerBtn.addEventListener('keydown', (e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault();
-                    headerBtn.click();
-                }
-            });
-        });
-    }
+  window.openProjectModal = function (slug) {
+    var data = projects[slug];
+    if (!data) return;
+    curSlug = slug;
+    curIdx = 0;
+    document.getElementById('modal-title').textContent = data.title;
+    document.getElementById('modal-desc').textContent = data.desc;
+    document.getElementById('modal-tags').textContent = data.tags;
+    show(0);
+    if (modal) modal.classList.add('active');
+    document.body.style.overflow = 'hidden';
+  };
 
-    // ========================================
-    // Intersection Observer for Fade-in
-    // ========================================
-    function initScrollAnimations() {
-        const observerOptions = {
-            root: null,
-            rootMargin: '0px 0px -50px 0px',
-            threshold: 0.1
-        };
+  function close() {
+    if (modal) modal.classList.remove('active');
+    document.body.style.overflow = '';
+    viewport.innerHTML = '';
+    curSlug = null;
+  }
 
-        const observer = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    entry.target.classList.add('visible');
-                    observer.unobserve(entry.target);
-                }
-            });
-        }, observerOptions);
-
-        elements.fadeElements.forEach(el => observer.observe(el));
-    }
-
-    // ========================================
-    // Lightbox for Gallery Items
-    // ========================================
-    function openLightbox(galleryItems, startIndex) {
-        currentGalleryItems = galleryItems;
-        currentGalleryIndex = startIndex;
-
-        // Build gallery
-        buildGallery();
-
-        // Show modal
-        elements.modal.classList.add('active');
-        elements.modal.setAttribute('aria-hidden', 'false');
-        document.body.style.overflow = 'hidden';
-
-        // Focus trap
-        elements.modalClose.focus();
-    }
-
-    function closeLightbox() {
-        elements.modal.classList.remove('active');
-        elements.modal.setAttribute('aria-hidden', 'true');
-        document.body.style.overflow = '';
-
-        // Stop all videos
-        const videos = elements.galleryTrack.querySelectorAll('video');
-        videos.forEach(video => {
-            video.pause();
-            video.currentTime = 0;
-        });
-    }
-
-    function buildGallery() {
-        const media = currentGalleryItems;
-
-        // Build gallery items
-        elements.galleryTrack.innerHTML = media.map((item, index) => {
-            if (item.type === 'video') {
-                return `
-                    <div class="gallery-item" data-index="${index}">
-                        <video controls preload="metadata" aria-label="Video ${index + 1}">
-                            <source src="${item.src}" type="video/mp4">
-                            Your browser does not support the video tag.
-                        </video>
-                    </div>
-                `;
-            }
-            return `
-                <div class="gallery-item" data-index="${index}">
-                    <img src="${item.src}" alt="Image ${index + 1}" loading="lazy">
-                </div>
-            `;
-        }).join('');
-
-        // Build dots
-        elements.galleryDots.innerHTML = media.map((_, index) =>
-            `<button class="gallery-dot ${index === currentGalleryIndex ? 'active' : ''}" data-index="${index}" aria-label="Go to slide ${index + 1}"></button>`
-        ).join('');
-
-        // Update gallery position
-        updateGalleryPosition();
-    }
-
-    function updateGalleryPosition() {
-        elements.galleryTrack.style.transform = `translateX(-${currentGalleryIndex * 100}%)`;
-
-        // Update dots
-        elements.galleryDots.querySelectorAll('.gallery-dot').forEach((dot, index) => {
-            dot.classList.toggle('active', index === currentGalleryIndex);
-        });
-
-        // Pause all videos except current
-        const videos = elements.galleryTrack.querySelectorAll('video');
-        videos.forEach((video, index) => {
-            if (index !== currentGalleryIndex) {
-                video.pause();
-            }
-        });
-    }
-
-    function nextSlide() {
-        currentGalleryIndex = (currentGalleryIndex + 1) % currentGalleryItems.length;
-        updateGalleryPosition();
-    }
-
-    function prevSlide() {
-        currentGalleryIndex = (currentGalleryIndex - 1 + currentGalleryItems.length) % currentGalleryItems.length;
-        updateGalleryPosition();
-    }
-
-    function goToSlide(index) {
-        currentGalleryIndex = index;
-        updateGalleryPosition();
-    }
-
-    function initLightbox() {
-        // Gallery item clicks within project panels
-        document.querySelectorAll('.gallery-grid .gallery-item').forEach(item => {
-            item.addEventListener('click', () => {
-                // Find all items in this gallery
-                const galleryGrid = item.closest('.gallery-grid');
-                const items = galleryGrid.querySelectorAll('.gallery-item');
-
-                // Build media array
-                const galleryItems = Array.from(items).map(el => ({
-                    src: el.dataset.src,
-                    type: el.dataset.type || 'image'
-                }));
-
-                // Find index of clicked item
-                const index = Array.from(items).indexOf(item);
-
-                openLightbox(galleryItems, index);
-            });
-
-            // Keyboard accessibility
-            item.setAttribute('tabindex', '0');
-            item.setAttribute('role', 'button');
-            item.setAttribute('aria-label', 'View full size');
-            item.addEventListener('keydown', (e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault();
-                    item.click();
-                }
-            });
-        });
-
-        // Close modal
-        elements.modalClose.addEventListener('click', closeLightbox);
-        elements.modalOverlay.addEventListener('click', closeLightbox);
-
-        // Escape key
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape' && elements.modal.classList.contains('active')) {
-                closeLightbox();
-            }
-        });
-
-        // Gallery navigation
-        elements.galleryNext.addEventListener('click', nextSlide);
-        elements.galleryPrev.addEventListener('click', prevSlide);
-
-        // Gallery dots
-        elements.galleryDots.addEventListener('click', (e) => {
-            if (e.target.classList.contains('gallery-dot')) {
-                goToSlide(parseInt(e.target.dataset.index, 10));
-            }
-        });
-
-        // Keyboard navigation for gallery
-        document.addEventListener('keydown', (e) => {
-            if (!elements.modal.classList.contains('active')) return;
-            if (e.key === 'ArrowRight') nextSlide();
-            if (e.key === 'ArrowLeft') prevSlide();
-        });
-
-        // Touch/swipe support for gallery
-        let touchStartX = 0;
-        let touchEndX = 0;
-
-        elements.galleryTrack.addEventListener('touchstart', (e) => {
-            touchStartX = e.changedTouches[0].screenX;
-        }, { passive: true });
-
-        elements.galleryTrack.addEventListener('touchend', (e) => {
-            touchEndX = e.changedTouches[0].screenX;
-            handleSwipe();
-        }, { passive: true });
-
-        function handleSwipe() {
-            const swipeThreshold = 50;
-            const diff = touchStartX - touchEndX;
-
-            if (Math.abs(diff) > swipeThreshold) {
-                if (diff > 0) {
-                    nextSlide();
-                } else {
-                    prevSlide();
-                }
-            }
-        }
-    }
-
-    // ========================================
-    // Video Hover Preview
-    // ========================================
-    function initVideoPreview() {
-        document.querySelectorAll('.gallery-grid .video-item').forEach(item => {
-            const video = item.querySelector('video');
-            if (!video) return;
-
-            item.addEventListener('mouseenter', () => {
-                video.play().catch(() => {});
-            });
-
-            item.addEventListener('mouseleave', () => {
-                video.pause();
-                video.currentTime = 0;
-            });
-        });
-    }
-
-    // ========================================
-    // Lazy Loading Enhancement
-    // ========================================
-    function initLazyLoading() {
-        // Native lazy loading is used via HTML attribute
-        // This adds Intersection Observer fallback for older browsers
-        if ('loading' in HTMLImageElement.prototype) {
-            return; // Native lazy loading supported
-        }
-
-        const images = document.querySelectorAll('img[loading="lazy"]');
-        const imageObserver = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    const img = entry.target;
-                    img.src = img.dataset.src || img.src;
-                    imageObserver.unobserve(img);
-                }
-            });
-        });
-
-        images.forEach(img => imageObserver.observe(img));
-    }
-
-    // ========================================
-    // Active Navigation Highlight
-    // ========================================
-    function initActiveNav() {
-        const sections = document.querySelectorAll('section[id]');
-        const navHeight = elements.nav.offsetHeight;
-
-        function highlightNav() {
-            const scrollY = window.pageYOffset;
-
-            sections.forEach(section => {
-                const sectionTop = section.offsetTop - navHeight - 100;
-                const sectionBottom = sectionTop + section.offsetHeight;
-                const sectionId = section.getAttribute('id');
-
-                if (scrollY >= sectionTop && scrollY < sectionBottom) {
-                    elements.navLinks.querySelectorAll('a').forEach(link => {
-                        link.classList.remove('active');
-                        if (link.getAttribute('href') === `#${sectionId}`) {
-                            link.classList.add('active');
-                        }
-                    });
-                }
-            });
-        }
-
-        window.addEventListener('scroll', throttle(highlightNav, 100), { passive: true });
-    }
-
-    // ========================================
-    // Utility Functions
-    // ========================================
-    function throttle(func, limit) {
-        let inThrottle;
-        return function(...args) {
-            if (!inThrottle) {
-                func.apply(this, args);
-                inThrottle = true;
-                setTimeout(() => inThrottle = false, limit);
-            }
-        };
-    }
-
-    // ========================================
-    // Theme Toggle
-    // ========================================
-    function initThemeToggle() {
-        const themeToggle = document.querySelector('.theme-toggle');
-        const html = document.documentElement;
-
-        // Check for saved theme preference or default to dark
-        const savedTheme = localStorage.getItem('theme') || 'dark';
-        html.setAttribute('data-theme', savedTheme);
-
-        themeToggle.addEventListener('click', () => {
-            const currentTheme = html.getAttribute('data-theme');
-            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-
-            html.setAttribute('data-theme', newTheme);
-            localStorage.setItem('theme', newTheme);
-        });
-    }
-
-    // ========================================
-    // Initialize
-    // ========================================
-    function init() {
-        initThemeToggle();
-        initNavigation();
-        initCollapsiblePanels();
-        initScrollAnimations();
-        initLightbox();
-        initVideoPreview();
-        initLazyLoading();
-        initActiveNav();
-
-        // Trigger initial fade-in for visible elements
-        setTimeout(() => {
-            elements.fadeElements.forEach(el => {
-                const rect = el.getBoundingClientRect();
-                if (rect.top < window.innerHeight) {
-                    el.classList.add('visible');
-                }
-            });
-        }, 100);
-    }
-
-    // Run on DOM ready
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', init);
-    } else {
-        init();
-    }
+  if (closeBtn) closeBtn.addEventListener('click', close);
+  if (modal) modal.addEventListener('click', function (e) { if (e.target === modal) close(); });
+  if (prevBtn) prevBtn.addEventListener('click', function () { if (curSlug && curIdx > 0) { curIdx--; show(curIdx); } });
+  if (nextBtn) nextBtn.addEventListener('click', function () { if (curSlug && curIdx < projects[curSlug].assets.length - 1) { curIdx++; show(curIdx); } });
+  document.addEventListener('keydown', function (e) {
+    if (!modal || !modal.classList.contains('active')) return;
+    if (e.key === 'Escape') close();
+    if (e.key === 'ArrowLeft' && prevBtn && !prevBtn.disabled) { curIdx--; show(curIdx); }
+    if (e.key === 'ArrowRight' && nextBtn && !nextBtn.disabled) { curIdx++; show(curIdx); }
+  });
 })();

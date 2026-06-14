@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400;1,700&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles.css">
+  <title>Field Notes — The IBRA REPORT</title>
+  <style>
+    body { background: #f2ede4; }
+    .blog-page { max-width: 720px; margin: 0 auto; padding: 40px 32px; background: #f2ede4; min-height: 100vh; }
+    .blog-page h1 { font-family: 'Playfair Display', serif; font-size: 36px; font-weight: 900; color: #1a1a18; line-height: 1.1; margin-bottom: 8px; }
+    .blog-page .meta { font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #7a7a70; letter-spacing: 0.08em; margin-bottom: 24px; display: block; }
+    .blog-page .back-link { font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #8b0000; letter-spacing: 0.14em; text-transform: uppercase; display: inline-block; margin-bottom: 24px; }
+    .blog-page .back-link:hover { text-decoration: underline; }
+    .blog-page .divider { height: 2px; background: #1a1a18; margin-bottom: 24px; }
+    .blog-page p { font-family: 'IBM Plex Sans', sans-serif; font-size: 15px; color: #3a3a32; line-height: 1.8; margin-bottom: 16px; }
+    .blog-page pre { font-family: 'IBM Plex Mono', monospace; font-size: 12px; background: #e8e3d9; padding: 16px; border-radius: 4px; overflow-x: auto; line-height: 1; margin-bottom: 16px; white-space: pre; }
+    .blog-page code { font-family: 'IBM Plex Mono', monospace; font-size: 13px; background: #e8e3d9; padding: 2px 6px; border-radius: 3px; }
+    .blog-page h2 { font-family: 'Playfair Display', serif; font-size: 24px; font-weight: 700; color: #1a1a18; margin: 28px 0 12px; }
+    .blog-page h3 { font-family: 'Playfair Display', serif; font-size: 18px; font-weight: 700; color: #1a1a18; margin: 24px 0 10px; }
+    .blog-page ul, .blog-page ol { font-family: 'IBM Plex Sans', sans-serif; font-size: 15px; color: #3a3a32; line-height: 1.8; margin-bottom: 16px; padding-left: 24px; }
+    .blog-page blockquote { border-left: 3px solid #8b0000; padding-left: 14px; margin: 16px 0; font-style: italic; color: #5a5a52; }
+    .blog-page hr { border: none; border-top: 1px solid #c8c4ba; margin: 24px 0; }
+    .blog-nav { max-width: 720px; margin: 0 auto; padding: 16px 32px 0; }
+    .blog-nav a { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #5a5a52; letter-spacing: 0.08em; }
+    .blog-nav a:hover { color: #1a1a18; }
+    .post-list { list-style: none; padding: 0; }
+    .post-list li { border-bottom: 1px solid #c8c4ba; padding: 16px 0; }
+    .post-list li:first-child { padding-top: 0; }
+    .post-list .post-title { font-family: 'Playfair Display', serif; font-size: 20px; font-weight: 700; color: #1a1a18; display: block; margin-bottom: 4px; }
+    .post-list .post-title:hover { text-decoration: underline; }
+    .post-list .post-date { font-family: 'IBM Plex Mono', monospace; font-size: 9px; color: #7a7a70; letter-spacing: 0.08em; }
+    .post-list .post-desc { font-family: 'IBM Plex Sans', sans-serif; font-size: 13px; color: #5a5a52; margin-top: 4px; line-height: 1.5; }
+    .listing-title { font-family: 'Playfair Display', serif; font-size: 32px; font-weight: 900; color: #1a1a18; margin-bottom: 20px; line-height: 1.1; }
+  </style>
+</head>
+<body>
+  <div class="blog-nav">
+    <a href="/">&larr; Back to The Ibra Report</a>
+  </div>
+  <div class="blog-page" id="blog-content">
+    <div class="divider"></div>
+    <div id="md-output"></div>
+  </div>
+
+  <script>
+    (function () {
+      var posts = [
+        { slug: 'homelab-gitops', file: '/blog/posts/homelab-gitops.md', title: 'I Replaced Cloud Hosting With a Dell R730 and a GPU', date: 'June 15, 2026', desc: 'Multiple production workloads, autonomous AI agents, and a full GitOps pipeline — running on bare-metal Kubernetes in a self-hosted rack.' },
+        { slug: 'moltmeets', file: '/blog/posts/moltmeets.md', title: 'MoltMeets — A Meeting Room for Humans and Agents', date: 'June 14, 2026', desc: 'What happens when AI agents get a seat at the table — not as tools, but as participants.' },
+        { slug: 'moltnations', file: '/blog/posts/moltnations.md', title: 'MoltNations — Governing Virtual Nations with AI', date: 'June 6, 2026', desc: 'A browser-based sovereign state simulation game where AI agents govern alongside humans as first-class Vice Presidents.' },
+        { slug: 'iugum', file: '/blog/posts/iugum.md', title: 'iugum', date: 'May 5, 2026', desc: 'MoltMeets as the yoke that helps steer many agent harnesses.' }
+      ];
+
+      function renderMarkdown(md) {
+        var lines = md.split('\n');
+        var html = '';
+        var inCode = false;
+        var codeContent = '';
+
+        for (var i = 0; i < lines.length; i++) {
+          var line = lines[i];
+          if (line.startsWith('```')) {
+            if (inCode) {
+              html += '<pre>' + escapeHtml(codeContent.trim()) + '</pre>';
+              codeContent = '';
+              inCode = false;
+            } else { inCode = true; }
+            continue;
+          }
+          if (inCode) { codeContent += line + '\n'; continue; }
+
+          if (line.startsWith('# ')) html += '<h1>' + line.slice(2) + '</h1>';
+          else if (line.startsWith('## ')) html += '<h2>' + line.slice(3) + '</h2>';
+          else if (line.startsWith('### ')) html += '<h3>' + line.slice(4) + '</h3>';
+          else if (line.startsWith('> ')) html += '<blockquote>' + inlineMd(line.slice(2)) + '</blockquote>';
+          else if (line.trim() === '') { /* skip */ }
+          else html += '<p>' + inlineMd(line) + '</p>';
+        }
+        return html;
+      }
+
+      function inlineMd(text) {
+        return text.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>').replace(/\*(.+?)\*/g, '<em>$1</em>').replace(/`(.+?)`/g, '<code>$1</code>').replace(/\[(.+?)\]\((.+?)\)/g, '<a href="$2">$1</a>');
+      }
+
+      function escapeHtml(text) { var d = document.createElement('div'); d.textContent = text; return d.innerHTML; }
+
+      var params = new URLSearchParams(window.location.search);
+      var slug = params.get('post');
+
+      if (slug) {
+        var post = posts.find(function (p) { return p.slug === slug; });
+        if (!post) {
+          document.getElementById('md-output').innerHTML = '<p style="color:#8b0000;">Note not found.</p>';
+          return;
+        }
+        fetch(post.file)
+          .then(function (r) { if (!r.ok) throw Error(); return r.text(); })
+          .then(function (md) {
+            var body = md;
+            if (md.startsWith('---')) {
+              var end = md.indexOf('---', 3);
+              if (end > -1) body = md.slice(end + 3).trim();
+            }
+            var out = document.getElementById('md-output');
+            out.innerHTML = '';
+            var back = document.createElement('a');
+            back.className = 'back-link'; back.href = '/blog'; back.textContent = '\u2190 All notes';
+            out.appendChild(back);
+            var h1 = document.createElement('h1');
+            h1.textContent = post.title;
+            out.appendChild(h1);
+            var d = document.createElement('span');
+            d.className = 'meta'; d.textContent = post.date;
+            out.appendChild(d);
+            // Strip leading h1 from body since we render it from frontmatter
+            var bodyLines = body.split('\n');
+            if (bodyLines[0] && bodyLines[0].startsWith('# ')) {
+              bodyLines.shift();
+            }
+            body = bodyLines.join('\n').trim();
+            out.innerHTML += renderMarkdown(body);
+          })
+          .catch(function () { document.getElementById('md-output').innerHTML = '<p style="color:#8b0000;">Note not found.</p>'; });
+      } else {
+        var out = document.getElementById('md-output');
+        out.innerHTML = '<h1 class="listing-title">Field Notes</h1>';
+        var list = document.createElement('ul');
+        list.className = 'post-list';
+        posts.forEach(function (p) {
+          var li = document.createElement('li');
+          li.innerHTML = '<a href="/blog?post=' + p.slug + '" class="post-title">' + p.title + '</a><span class="post-date">' + p.date + '</span><p class="post-desc">' + p.desc + '</p>';
+          list.appendChild(li);
+        });
+        out.appendChild(list);
+      }
+    })();
+  </script>
+</body>
+</html>
