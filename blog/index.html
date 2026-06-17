@@ -23,6 +23,12 @@
     .blog-page ul, .blog-page ol { font-family: 'IBM Plex Sans', sans-serif; font-size: 15px; color: #3a3a32; line-height: 1.8; margin-bottom: 16px; padding-left: 24px; }
     .blog-page blockquote { border-left: 3px solid #8b0000; padding-left: 14px; margin: 16px 0; font-style: italic; color: #5a5a52; }
     .blog-page hr { border: none; border-top: 1px solid #c8c4ba; margin: 24px 0; }
+    .blog-page img { cursor: pointer; }
+    .blog-lightbox { display: none; position: fixed; inset: 0; z-index: 2000; background: rgba(26, 26, 24, 0.94); justify-content: center; align-items: center; padding: 40px; cursor: pointer; }
+    .blog-lightbox.active { display: flex; }
+    .blog-lightbox-img { max-width: 95%; max-height: 95%; object-fit: contain; border-radius: 4px; cursor: default; }
+    .blog-lightbox-close { position: fixed; top: 16px; right: 24px; background: none; border: none; font-size: 36px; color: #f2ede4; cursor: pointer; z-index: 2001; line-height: 1; }
+    .blog-lightbox-close:hover { color: #8b0000; }
     .blog-nav { max-width: 720px; margin: 0 auto; padding: 16px 32px 0; }
     .blog-nav a { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #5a5a52; letter-spacing: 0.08em; }
     .blog-nav a:hover { color: #1a1a18; }
@@ -45,9 +51,15 @@
     <div id="md-output"></div>
   </div>
 
+  <div class="blog-lightbox" id="blog-lightbox">
+    <button class="blog-lightbox-close" id="blog-lightbox-close">&times;</button>
+    <img class="blog-lightbox-img" id="blog-lightbox-img" src="" alt="">
+  </div>
+
   <script>
     (function () {
       var posts = [
+        { slug: 'distilling-tool-calls', file: '/blog/posts/distilling-tool-calls.md', title: 'Distilling Frontier Tool-Calling Into a Local 8B', date: 'June 17, 2026', desc: 'Distilling a frontier model into an 8B that runs free on a single GPU — the untrained base calls no tools, the distilled student reproduces the full agentic plan.' },
         { slug: 'homelab-gitops', file: '/blog/posts/homelab-gitops.md', title: 'I Replaced Cloud Hosting With a Dell R730 and a GPU', date: 'June 15, 2026', desc: 'Multiple production workloads, autonomous AI agents, and a full GitOps pipeline — running on bare-metal Kubernetes in a self-hosted rack.' },
         { slug: 'moltmeets', file: '/blog/posts/moltmeets.md', title: 'MoltMeets — A Meeting Room for Humans and Agents', date: 'June 14, 2026', desc: 'What happens when AI agents get a seat at the table — not as tools, but as participants.' },
         { slug: 'moltnations', file: '/blog/posts/moltnations.md', title: 'MoltNations — Governing Virtual Nations with AI', date: 'June 6, 2026', desc: 'A browser-based sovereign state simulation game where AI agents govern alongside humans as first-class Vice Presidents.' },
@@ -137,6 +149,31 @@
         });
         out.appendChild(list);
       }
+
+      // Image lightbox
+      var lightbox = document.getElementById('blog-lightbox');
+      var lightboxImg = document.getElementById('blog-lightbox-img');
+      var lightboxClose = document.getElementById('blog-lightbox-close');
+      var out = document.getElementById('md-output');
+
+      if (out) out.addEventListener('click', function (e) {
+        if (e.target.tagName === 'IMG' && lightbox && lightboxImg) {
+          lightboxImg.src = e.target.src;
+          lightbox.classList.add('active');
+          document.body.style.overflow = 'hidden';
+        }
+      });
+      if (lightboxClose) lightboxClose.addEventListener('click', function () { closeLightbox(); });
+      if (lightbox) lightbox.addEventListener('click', function (e) { if (e.target === lightbox) closeLightbox(); });
+      function closeLightbox() {
+        if (lightbox) lightbox.classList.remove('active');
+        if (lightboxImg) lightboxImg.src = '';
+        document.body.style.overflow = '';
+      }
+      document.addEventListener('keydown', function (e) {
+        if (lightbox && lightbox.classList.contains('active') && e.key === 'Escape') closeLightbox();
+      });
+
     })();
   </script>
 </body>
