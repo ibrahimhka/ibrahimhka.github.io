@@ -47,26 +47,39 @@ description: "A frontier model's agentic tool-calling, distilled into an 8B that
 
 ---
 
-You rarely need the largest model money can rent. For a narrow, repeatable, *agentic* task — where the real work is deciding which tools to call, and in what order — you need the behaviour, not the half-trillion-parameter host it happens to live on. Behaviour, it turns out, you can distil.
+While LLMs are excellent at doing many things, sometimes when desiging an agentic workflow, many of your agents can do fine with a better suited and better trained smaller language model. 
+That was the hypothesis I set out to test and see if I could cut costs on parts of my inference api calls, via a locally hosted model. 
 
 ## The task
 
-A market-analyst, in the style of the TradingAgents tool tier. A ticker and a date go in; the model pulls the price history, selects up to eight technical indicators that complement rather than echo one another, takes a deterministic *verified snapshot* to ground the figures it is about to cite, and only then writes. The prose is the easy part — every model writes paragraphs. The discipline is the skill: which tools, in what order, and the restraint to verify before it asserts. Frontier models have it; raw open-source models do not.
+A market-analyist agent, in the style of an agentic trading harness, a ticker and a date are submitted, the model pulls the price history, selects one or more eight technical indicators from a set of 8. 
+The aim is to have a deterministic verified snapshot to ground the figures it is about to cite and call. Leading to fine grained output, that is repeatable and reliable using a small language model of 8 billion parameters only.
 
 ## The move
 
-Capture the teacher's ReAct traces — its exact tool calls, turn by turn — and fine-tune a **Qwen3-8B** with QLoRA on that policy, supervising only the assistant's tool-call turns. The whole run fits on one **RTX 4070, 12 GB**: a 4-bit base, a small LoRA adapter, a few minutes a pass. It ships as a GGUF, applied over the stock base in Ollama. Nothing memorised — only the sequence of decisions learned.
+Capture the teacher's ReAct traces, all the tools called and logged and fine-tune a **Qwen3-8B** with QLoRA on that chain set of tool calls, supervising only the assistant's tool-call turns. The whole run fits on one **RTX 4070, 12 GB** or **NVIDIA TESLA P40**: a 4-bit base with a small LoRA adapter. It ships as a GGUF, applied over the stock base in Ollama. 
 
 ## What it bought
 
-Per single decision, scored against the teacher, the untrained base picked the right tool **49%** of the time; the distilled student, **90%**. The screenshot makes the point more plainly than the number.
+Per single decision, scored against the teacher, the untrained base picked the right tool **49%** of the time; the distilled student, **90%**.
+
+The screenshot shows the comparison for the same base prompt, running on:
+
+ - Base model Qwen3-8B plain 
+ - Trained model Qwen3-8B-Student
+ - Teacher model - openai/openrouter API call
 
 <img src="/assets/distill/results.png" alt="Three-column demo on one ticker: untrained baseline, distilled student, and frontier teacher running the market-analyst task" style="width:100%;border:1px solid #c8c4ba;border-radius:4px;margin:12px 0;">
 
+
 > One run, ticker **AAPL**. **Baseline** — the untrained Qwen3-8B — reaches for no tools: it writes 3,800 characters of *reasoning* about which indicators it might pick, then stops, having done nothing. **Student** — the same 8B plus our LoRA — runs the full plan: `get_stock_data`, eight `get_indicators`, the verified snapshot, then a report — in ~43 seconds, at **$0**, with nothing leaving the machine. **Teacher** — the frontier model, remote — produces the same shape for a few cents. The student even takes the verified snapshot the teacher skipped.
 
-The contrast is the whole argument. The same model, untouched, thinks and never acts. The trained one runs the agentic plan end to end — structurally indistinguishable from the frontier, and on a good run more thorough than it — locally, at zero cost per call, with nothing off the box. The column that throttles and stalls is the teacher, on its remote free tier. The small model on the desk is the reliable one.
+The resuylts clearly shows that the base model, thinks and writes a 3000+ characters report. The trained model runs the agentic plan end to end, executing tool calls , structurally similar to that of the frontier, and on a good run more thorough than it, at zero cost per call(infra dependant, otherwise fractional costs). Interestingly enough, the local model wins if we are strictly measuring speed and time to execute end-to-end.
 
 ## The honest part
 
-Base habits are stubborn. Qwen3 wanted to batch its eight indicators into one call and to invent its own parameter names; distillation pulled it most of the way, and a small serving-side normaliser handles the residue. The per-decision score flatters it a little against the full multi-turn loop, where errors compound, and another pass is queued to clean the raw output. None of it moves the headline: a ~3 GB adapter turns a model that *won't* drive tools into one that runs the whole workflow. Distil the behaviour once; run it forever, on hardware you own.
+Claude says:"Distil the behaviour once; run it forever, on hardware you own." and I couldn't agree more. In certain cases.
+
+While this doesn't mean that the trained model can replace any and all inference api calls for a trading harness, it does mean that certain agents in the harness can make use of such a model in their planning or via an llm model router in order to achieve similar level analysis based on an MCP toolkit backed by a backend.
+The trained model is small, on the right hardware, it can be scaled to service multiple users, the pattern checks out and can be reused for different purposes or with larger models and larger data sets, although I might need vast.ai for that, or a generous H100 donor :) 
+
