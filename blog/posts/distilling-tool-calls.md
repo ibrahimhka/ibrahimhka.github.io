@@ -43,6 +43,8 @@ description: "A frontier model's tool calling can be distilled into an 8 billion
                                                  :.
 ```
 
+<div class="article-author">Author · <span class="who">Ibrahim H.</span></div>
+
 *A frontier model knows how to drive an analyst's tools — pull prices, pick the right indicators, verify the numbers, then write. The behaviour is the valuable part, and behaviour moves. So I moved it into an 8B that runs free, on one GPU in the rack.*
 
 ---

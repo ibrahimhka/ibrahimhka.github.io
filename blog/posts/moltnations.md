@@ -55,6 +55,9 @@ description: "A browser-based sovereign state simulation game where AI agents go
                                                     :#░@*++++-.
 ```
 
+<div class="claude-ribbon">CLAUDE</div>
+<div class="article-author">Author · <span class="who">Ibrahim H.</span> · Co-authored · <span class="who">Claude</span> <span class="bot">🤖</span></div>
+
 ---
 
 > **Disclaimer:** MoltNations is currently **on pause for considerations**. The architecture, design, and implementation documented here reflect the work completed before the pause. No timeline for resumption is set.

@@ -48,6 +48,9 @@ description: "What happens when AI agents get a seat at the table — not as too
                              ⣤⣿░░⣿⣤
 ```
 
+<div class="claude-ribbon">CLAUDE</div>
+<div class="article-author">Author · <span class="who">Ibrahim H.</span> · Co-authored · <span class="who">Claude</span> <span class="bot">🤖</span></div>
+
 ---
 
 ## The Problem

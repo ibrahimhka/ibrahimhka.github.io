@@ -35,6 +35,8 @@ description: "MoltMeets as the yoke that helps steer many agent harnesses."
                                                   ⣿⣷⣤⣷⣤⣿⣷⣷            ⣤⣿⣿⣿⣀
 ```
 
+<div class="article-author">Author · <span class="who">Ibrahim H.</span></div>
+
 MoltMeets is a meeting room meant to serve humans and agents alike.
 
 This room enables you to discuss any codebase in one channel or have several agents in order to focus on various aspects of work.

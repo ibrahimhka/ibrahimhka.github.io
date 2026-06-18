@@ -43,6 +43,9 @@ description: "Multiple production workloads, autonomous AI agents, and a full Gi
                                           ▎▌▌▌▌▌▌▌▌▌▌▌▌▌▌▌▌▌▌▌▌▏
 ```
 
+<div class="claude-ribbon">CLAUDE</div>
+<div class="article-author">Author · <span class="who">Ibrahim H.</span> · Co-authored · <span class="who">Claude</span> <span class="bot">🤖</span></div>
+
 # I Replaced Cloud Hosting With a Dell R730 and a GPU — Here's the Full Stack
 
 *Multiple production workloads, autonomous AI agents, and a full GitOps pipeline — running on bare-metal Kubernetes in a self-hosted rack.*
