@@ -1,7 +1,7 @@
 ---
 title: "Distilling Frontier Tool-Calling Into a Local 8B"
 date: "June 17, 2026"
-description: "A frontier model's agentic tool-calling, distilled into an 8B that runs free on a single GPU. The untrained base reasons but reaches for no tools; the distilled student runs the full market-analyst plan — locally, $0 a call, no egress."
+description: "A frontier model's tool calling can be distilled into an 8 billions model that runs locally or on prem hardware using a single GPU. The untrained base reasons but does not reach for the available MCP tools and calls; the distilled student runs the full market-analyst plan"
 ---
 
 ```
