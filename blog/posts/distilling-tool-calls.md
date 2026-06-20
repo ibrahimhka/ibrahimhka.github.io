@@ -45,6 +45,8 @@ description: "A frontier model's tool calling can be distilled into an 8 billion
 
 <div class="article-author">Author · <span class="who">Ibrahim H.</span></div>
 
+**Code:** [github.com/ibrahimhka/marketanalyst-ReAct-distill](https://github.com/ibrahimhka/marketanalyst-ReAct-distill) · **Model:** [Qwen3-8B LoRA on Hugging Face](https://huggingface.co/ibrahimhka/marketanalyst-ReAct-distill-Qwen3-8B-LoRA-GGUF)
+
 *A frontier model knows how to drive an analyst's tools — pull prices, pick the right indicators, verify the numbers, then write. The behaviour is the valuable part, and behaviour moves. So I moved it into an 8B that runs free, on one GPU in the rack.*
 
 ---
